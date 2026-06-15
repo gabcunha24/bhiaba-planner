@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bhia.bá — Planejador de Conteúdo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --T:#BC411A;--TL:#d4613a;--TP:#f5e8e2;
+  --M:#6F452F;--ML:#8a5a3e;
+  --OFF:#FFFCF0;--OD:#f0ece0;--ODD:#e5e0d0;
+  --txt:#2a1a10;--txm:#6b4a35;--txl:#a07858;
+  --bdr:#ddd5c5;--W:#ffffff;
+  --G:#3a7d44;--GP:#e8f5ea;
+  --sh:0 2px 12px rgba(111,69,47,.08);
+  --rd:10px;--rs:6px
+}
+body{font-family:Georgia,serif;background:var(--OFF);color:var(--txt);min-height:100vh}
+.topbar{background:var(--T);color:var(--OFF);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.logo-wrap{display:flex;align-items:center;gap:8px}
+.logo-wrap span{font-size:20px;font-weight:700;letter-spacing:-.5px}
+.logo-wrap small{font-size:11px;opacity:.8;font-style:italic}
+.top-acts{display:flex;gap:6px}
+.btn-ic{background:rgba(255,255,255,.15);border:none;color:var(--OFF);padding:6px 10px;border-radius:var(--rs);cursor:pointer;font-size:12px;font-family:Georgia,serif;white-space:nowrap}
+.btn-ic:hover{background:rgba(255,255,255,.25)}
+.nav{background:var(--M);display:flex;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nb{padding:10px 16px;border:none;background:none;color:rgba(255,252,240,.7);cursor:pointer;font-size:12px;font-family:Georgia,serif;white-space:nowrap;border-bottom:3px solid transparent;transition:all .15s}
+.nb:hover{color:var(--OFF);background:rgba(255,255,255,.08)}
+.nb.active{color:var(--OFF);border-bottom-color:var(--TL);background:rgba(255,255,255,.1)}
+.main{max-width:920px;margin:0 auto;padding:1.5rem}
+.sec{display:none}.sec.active{display:block}
+.card{background:var(--W);border:1px solid var(--bdr);border-radius:var(--rd);padding:1.25rem;margin-bottom:1rem;box-shadow:var(--sh)}
+.btn{padding:8px 18px;border-radius:var(--rs);border:none;cursor:pointer;font-size:13px;font-family:Georgia,serif;transition:all .15s}
+.btn-p{background:var(--T);color:var(--OFF)}.btn-p:hover{background:var(--TL)}
+.btn-s{background:var(--OD);color:var(--M);border:1px solid var(--bdr)}.btn-s:hover{background:var(--ODD)}
+.btn-sm{padding:5px 12px;font-size:12px}
+input,textarea,select{font-family:Georgia,serif;font-size:13px;color:var(--txt);background:var(--OFF);border:1px solid var(--bdr);border-radius:var(--rs);padding:8px 10px;width:100%;transition:border-color .15s}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--T);background:var(--W)}
+textarea{resize:vertical;min-height:60px;line-height:1.6}
+label{font-size:12px;color:var(--txm);display:block;margin-bottom:4px}
+.info{background:#fff8f5;border:1px solid var(--TP);border-left:3px solid var(--T);border-radius:0;padding:10px 14px;margin-bottom:1rem;font-size:12px;color:var(--txm);line-height:1.6}
+.info strong{color:var(--T)}
+
+/* NAV DIAS */
+.day-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:1rem}
+.dtab{padding:6px 14px;border-radius:20px;border:1px solid var(--bdr);font-size:12px;cursor:pointer;background:var(--W);color:var(--txm);font-family:Georgia,serif;transition:all .15s;white-space:nowrap}
+.dtab.active{background:var(--T);color:var(--OFF);border-color:var(--T)}
+.dtab:hover:not(.active){background:var(--TP)}
+
+/* SLOTS DRAG & DROP */
+.day-header-info{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:8px}
+.day-title{font-size:18px;font-weight:500;color:var(--M)}
+.day-stats{display:flex;gap:6px;flex-wrap:wrap}
+.dstat{font-size:11px;background:var(--OD);border:1px solid var(--bdr);border-radius:var(--rs);padding:3px 10px;color:var(--txm)}
+.dstat strong{color:var(--txt)}
+.slots-container{min-height:40px}
+.slot-wrap{position:relative;margin-bottom:6px}
+.slot-wrap.dragging{opacity:.4}
+.slot-wrap.drag-over{border-top:2px solid var(--T)}
+.slot{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-radius:var(--rs);border:1px solid var(--bdr);border-left:4px solid var(--bdr);background:var(--OFF);transition:all .15s}
+.slot:hover{border-left-color:var(--T);background:var(--TP)}
+.slot.done{opacity:.55;background:var(--GP)}
+.slot.done .st{text-decoration:line-through;color:var(--txl)}
+.slot.t-reels{border-left-color:#E1306C}
+.slot.t-feed{border-left-color:var(--T)}
+.slot.t-story{border-left-color:#7B68EE}
+.slot.t-grupo{border-left-color:var(--M);background:#faf7f4}
+.drag-handle{cursor:grab;color:var(--txl);font-size:16px;padding-top:2px;flex-shrink:0;user-select:none;touch-action:none}
+.drag-handle:active{cursor:grabbing}
+.slot-ck{width:18px;height:18px;border:1.5px solid var(--bdr);border-radius:4px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;transition:all .15s}
+.slot.done .slot-ck{background:var(--G);border-color:var(--G);color:#fff}
+.sh{font-size:11px;color:var(--txl);min-width:42px;padding-top:2px;font-style:italic;flex-shrink:0}
+.sb{flex:1;min-width:0}
+.st{font-size:13px;font-weight:600;color:var(--txt);margin-bottom:3px;word-break:break-word}
+.stags{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}
+.stag{font-size:10px;padding:1px 7px;border-radius:8px}
+.stag-r{background:#fce4ec;color:#c2185b}
+.stag-f{background:var(--TP);color:var(--T)}
+.stag-s{background:#ede7f6;color:#4527a0}
+.stag-g{background:#efebe9;color:var(--M)}
+.stag-c{background:var(--ODD);color:var(--txm)}
+.sdica{font-size:11px;color:var(--txm);margin-top:4px;font-style:italic;line-height:1.5}
+.snote{font-size:11px;color:var(--T);margin-top:4px;line-height:1.5}
+.slot-btns{display:flex;flex-direction:column;gap:3px;flex-shrink:0}
+.slot-btn{background:none;border:none;cursor:pointer;font-size:11px;color:var(--txl);padding:1px 4px;border-radius:3px;line-height:1}
+.slot-btn:hover{background:var(--ODD);color:var(--txt)}
+.slot-btn.del:hover{color:#c0392b}
+.add-slot-btn{width:100%;padding:8px;border:1px dashed var(--bdr);border-radius:var(--rs);background:none;color:var(--txl);cursor:pointer;font-size:12px;font-family:Georgia,serif;text-align:center;margin-top:4px;transition:all .15s}
+.add-slot-btn:hover{background:var(--TP);border-color:var(--T);color:var(--T)}
+
+/* IA */
+.iaf{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+@media(max-width:600px){.iaf{grid-template-columns:1fr}}
+.iaf-full{grid-column:1/-1}
+.ia-r{display:none}.ia-r.visible{display:block}
+.ia-tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
+.iat{padding:6px 14px;border-radius:20px;border:1px solid var(--bdr);font-size:12px;cursor:pointer;background:var(--W);color:var(--txm);font-family:Georgia,serif}
+.iat.active{background:var(--M);color:var(--OFF);border-color:var(--M)}
+.ia-area{width:100%;min-height:140px;border:1px solid var(--bdr);border-radius:var(--rs);padding:12px;font-size:13px;font-family:Georgia,serif;color:var(--txt);background:var(--OFF);resize:vertical;line-height:1.7}
+.ia-area:focus{outline:none;border-color:var(--T)}
+.ia-acts{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+
+/* CHECKLIST */
+.pb-wrap{margin-bottom:1rem}
+.pb-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--txm);margin-bottom:6px}
+.pb{height:6px;background:var(--ODD);border-radius:3px;overflow:hidden}
+.pbf{height:100%;background:var(--T);border-radius:3px;transition:width .3s}
+.ci{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--OD)}
+.ci:last-child{border-bottom:none}
+.cb{width:20px;height:20px;border:1.5px solid var(--bdr);border-radius:5px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.ci.chk .cb{background:var(--T);border-color:var(--T);color:#fff;font-size:12px}
+.ci.chk .cl{text-decoration:line-through;color:var(--txl)}
+.cl{font-size:13px;color:var(--txt);cursor:pointer;flex:1}
+.cdt{font-size:12px;font-weight:700;color:var(--M);margin:1rem 0 8px;text-transform:uppercase;letter-spacing:.5px}
+
+/* DATAS */
+.di{display:flex;align-items:flex-start;gap:12px;padding:12px;border-radius:var(--rs);border:1px solid var(--bdr);background:var(--W);margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.di:hover{border-color:var(--T)}
+.dbadge{min-width:52px;text-align:center;padding:4px 6px;border-radius:var(--rs);background:var(--TP);flex-shrink:0}
+.dbd{font-size:18px;font-weight:700;color:var(--T);line-height:1}
+.dbm{font-size:10px;color:var(--txm);text-transform:uppercase}
+.dinfo{flex:1}
+.dname{font-size:13px;font-weight:600;color:var(--txt)}
+.dmeta{font-size:11px;color:var(--txl);margin-top:2px}
+.dnote{font-size:12px;color:var(--txm);font-style:italic;margin-top:4px}
+.a7{border-left:3px solid #f39c12}
+.a3{border-left:3px solid #e67e22}
+.a1{border-left:3px solid var(--T);background:var(--TP)}
+.abadge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:6px}
+.a7 .abadge{background:#fdebd0;color:#e67e22}
+.a3 .abadge{background:#fde5c9;color:#d35400}
+.a1 .abadge{background:var(--TP);color:var(--T)}
+.mf{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:1rem}
+.mb{padding:4px 10px;border-radius:14px;border:1px solid var(--bdr);font-size:11px;cursor:pointer;background:var(--W);color:var(--txm);font-family:Georgia,serif}
+.mb.active{background:var(--M);color:var(--OFF);border-color:var(--M)}
+
+/* BIBLIOTECA */
+.lt{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.lt input{flex:1;min-width:180px}
+.libi{padding:12px;border-radius:var(--rs);border:1px solid var(--bdr);background:var(--W);margin-bottom:8px}
+.libh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:8px;flex-wrap:wrap}
+.libcat{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--TP);color:var(--T)}
+.librt{font-size:11px;padding:2px 8px;border-radius:10px}
+.rb{background:var(--GP);color:var(--G)}.rm{background:#fef9e7;color:#856404}.rn{background:#fdecea;color:#842029}
+.libtxt{font-size:13px;color:var(--txt);line-height:1.6;margin-bottom:6px}
+.libacts{display:flex;gap:6px}
+.empty{text-align:center;padding:2rem;color:var(--txl);font-style:italic;font-size:13px}
+
+/* CONFIG */
+.cs{margin-bottom:1.5rem}
+.cs h3{font-size:14px;color:var(--M);margin-bottom:10px;border-bottom:1px solid var(--bdr);padding-bottom:6px}
+.cr{display:flex;gap:8px;align-items:flex-end}.cr>div{flex:1}
+.ba{display:flex;gap:8px;flex-wrap:wrap}
+
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(42,26,16,.5);z-index:300;display:none;align-items:center;justify-content:center;padding:1rem}
+.mo.open{display:flex}
+.modal{background:var(--W);border-radius:var(--rd);padding:1.5rem;width:100%;max-width:500px;box-shadow:0 8px 32px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.mtitle{font-size:15px;font-weight:700;color:var(--M)}
+.mclose{background:none;border:none;font-size:20px;cursor:pointer;color:var(--txl)}
+.mf2{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem}
+.mg{display:grid;gap:10px}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--M);color:var(--OFF);padding:10px 18px;border-radius:var(--rs);font-size:13px;z-index:500;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+
+@media(max-width:600px){.main{padding:1rem}.topbar{padding:0 1rem}.logo-wrap small{display:none}}
+.gerenciar-item{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--OD)}.gerenciar-item:last-child{border-bottom:none}.gerenciar-item span{flex:1;font-size:13px}.gerenciar-item-edit{background:none;border:none;cursor:pointer;font-size:12px;color:var(--txl);padding:2px 6px;border-radius:3px}.gerenciar-item-edit:hover{background:var(--OD)}.gerenciar-item-del{background:none;border:none;cursor:pointer;font-size:12px;color:#c0392b;padding:2px 6px;border-radius:3px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="position:fixed;inset:0;background:var(--OFF);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem">
+  <div class="card" style="max-width:360px;width:100%;text-align:center">
+    <div style="font-size:24px;font-weight:700;color:var(--T);margin-bottom:4px">Bhia.bá</div>
+    <div style="font-size:12px;color:var(--txm);font-style:italic;margin-bottom:1.5rem">vista sua essência</div>
+    <div style="display:grid;gap:10px;text-align:left">
+      <div><label>E-mail</label><input type="email" id="login-email" placeholder="seu@email.com"></div>
+      <div><label>Senha</label><input type="password" id="login-senha" placeholder="••••••••"></div>
+    </div>
+    <button class="btn btn-p" onclick="fazerLogin()" style="width:100%;margin-top:1rem" id="login-btn">Entrar</button>
+    <p id="login-error" style="font-size:12px;color:#c0392b;margin-top:10px;display:none"></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen" style="display:none">
+
+<div class="topbar">
+  <div class="logo-wrap"><span>Bhia.bá</span><small>vista sua essência</small></div>
+  <div class="top-acts">
+    <button class="btn-ic" onclick="exportBackup()">⬇ Backup</button>
+    <button class="btn-ic" onclick="document.getElementById('imp').click()">⬆ Importar</button>
+    <input type="file" id="imp" accept=".json" style="display:none" onchange="importBackup(event)">
+    <button class="btn-ic" onclick="fazerLogout()">Sair</button>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nb active" onclick="showSec('calendario',this)">📅 Calendário</button>
+  <button class="nb" onclick="showSec('datas',this)">🗓 Datas Especiais</button>
+  <button class="nb" onclick="showSec('biblioteca',this)">📚 Biblioteca</button>
+  <button class="nb" onclick="showSec('config',this)">⚙ Config</button>
+</nav>
+
+<div class="main">
+
+<!-- CALENDÁRIO -->
+<div id="sec-calendario" class="sec active">
+
+  <div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
+  <div class="day-tabs" id="day-tabs" style="margin-bottom:0;flex:1"></div>
+  <button class="btn btn-p btn-sm" onclick="abrirAdicionarDia()" style="flex-shrink:0;white-space:nowrap">+ Dia</button>
+</div>
+<div id="day-edit-bar" style="display:flex;margin-bottom:.75rem;gap:6px">
+  <button class="btn btn-s btn-sm" onclick="abrirEditarDia()">✏️ Editar dia</button>
+  <button class="btn btn-s btn-sm" onclick="excluirDia()" style="color:#842029" id="btn-excluir-dia">🗑 Excluir dia</button>
+</div>
+  <div class="day-header-info">
+    <div class="day-title" id="day-title"></div>
+    <div class="day-stats" id="day-stats"></div>
+  </div>
+  <div class="slots-container" id="slots-container"></div>
+  <button class="add-slot-btn" onclick="addSlot()">+ Adicionar horário</button>
+</div>
+
+
+<!-- DATAS -->
+<div id="sec-datas" class="sec">
+  <div class="card" style="margin-bottom:1rem">
+    <div style="display:flex;align-items:center;gap:10px">
+      <label style="font-size:12px;color:var(--txm);white-space:nowrap;margin-bottom:0">Filtrar por mês</label>
+      <select id="month-select" onchange="setMesSelect(this.value)" style="flex:1;max-width:200px">
+        <option value="">Todos os meses</option>
+        <option value="1">Janeiro</option><option value="2">Fevereiro</option>
+        <option value="3">Março</option><option value="4">Abril</option>
+        <option value="5">Maio</option><option value="6">Junho</option>
+        <option value="7">Julho</option><option value="8">Agosto</option>
+        <option value="9">Setembro</option><option value="10">Outubro</option>
+        <option value="11">Novembro</option><option value="12">Dezembro</option>
+      </select>
+      <button class="btn btn-p btn-sm" onclick="abrirNovaData()" style="flex-shrink:0">+ Nova data</button>
+    </div>
+  </div>
+  <div id="dates-list"></div>
+</div>
+
+<!-- BIBLIOTECA -->
+<div id="sec-biblioteca" class="sec">
+  <div class="card">
+    <div class="lt">
+      <input type="text" id="lib-search" placeholder="Buscar..." oninput="renderBib()">
+      <select id="lib-fcat" onchange="renderBib()" style="max-width:160px">
+        <option value="">Todas categorias</option>
+        <option>Feminino</option><option>Feminino Plus</option><option>Masculino</option>
+        <option>Acessórios</option><option>Dicas de Estilo</option><option>Bastidores</option>
+      </select>
+      <button class="btn btn-p btn-sm" onclick="abrirModalBib()">+ Adicionar</button>
+    </div>
+    <div id="biblioteca-list"></div>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div id="sec-config" class="sec">
+  <div class="card">
+    <div class="cs">
+      <h3>💾 Backup dos dados</h3>
+      <p style="font-size:12px;color:var(--txl);margin-bottom:10px">Faça backup semanalmente e salve no Google Drive para não perder os dados.</p>
+      <div class="ba">
+        <button class="btn btn-p" onclick="exportBackup()">⬇ Exportar backup</button>
+        <button class="btn btn-s" onclick="document.getElementById('imp2').click()">⬆ Importar</button>
+        <input type="file" id="imp2" accept=".json" style="display:none" onchange="importBackup(event)">
+        <button class="btn btn-s" onclick="limpar()" style="color:#842029">🗑 Limpar dados</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- MODAL SLOT -->
+<div class="mo" id="modal-slot">
+  <div class="modal" style="max-width:560px">
+    <div class="mh"><span class="mtitle" id="mslot-title">Editar slot</span><button class="mclose" onclick="fechaModal('modal-slot')">×</button></div>
+    <div class="mg">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label>Horário</label><input type="text" id="mhora" placeholder="Ex: 19h00"></div>
+        <div><label>Tipo</label>
+          <div style="display:flex;gap:4px">
+            <select id="mtipo" style="flex:1"></select>
+            <button class="btn btn-s btn-sm" onclick="abrirGerenciarTipos()" title="Gerenciar tipos" style="padding:6px 8px;flex-shrink:0">⚙</button>
+          </div>
+        </div>
+      </div>
+      <div><label>Título do slot</label><input type="text" id="mtitulo" placeholder="Ex: Reels — look feminino"></div>
+      <div><label>Nome da peça</label><input type="text" id="mpeca" placeholder="Ex: blusa de linho bege, cinto dourado..."></div>
+      <div><label>Categoria</label>
+        <div style="display:flex;gap:4px">
+          <select id="mcat" style="flex:1"></select>
+          <button class="btn btn-s btn-sm" onclick="abrirGerenciarCats()" title="Gerenciar categorias" style="padding:6px 8px;flex-shrink:0">⚙</button>
+        </div>
+      </div>
+      <div><label>Dicas / Roteiro / Observações</label><textarea id="mdica" rows="3" placeholder="Orientação de produção, roteiro, observações..."></textarea></div>
+      <div><label>Link de inspiração</label><input type="url" id="mlink" placeholder="https://..."></div>
+    </div>
+    <div class="mf2">
+      <button class="btn btn-s btn-sm" onclick="delSlotFromModal()" style="color:#842029;margin-right:auto">🗑 Excluir slot</button>
+      <button class="btn btn-s btn-sm" onclick="fechaModal('modal-slot')">Cancelar</button>
+      <button class="btn btn-p btn-sm" onclick="salvarSlot()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GERENCIAR TIPOS -->
+<div class="mo" id="modal-tipos">
+  <div class="modal" style="max-width:400px">
+    <div class="mh"><span class="mtitle">Gerenciar tipos</span><button class="mclose" onclick="fechaModal('modal-tipos')">×</button></div>
+    <div id="tipos-list" style="margin-bottom:10px"></div>
+    <div style="display:flex;gap:6px">
+      <input type="text" id="novo-tipo-input" placeholder="Novo tipo..." style="flex:1">
+      <button class="btn btn-p btn-sm" onclick="adicionarTipo()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GERENCIAR CATEGORIAS -->
+<div class="mo" id="modal-cats">
+  <div class="modal" style="max-width:400px">
+    <div class="mh"><span class="mtitle">Gerenciar categorias</span><button class="mclose" onclick="fechaModal('modal-cats')">×</button></div>
+    <div id="cats-list" style="margin-bottom:10px"></div>
+    <div style="display:flex;gap:6px">
+      <input type="text" id="nova-cat-input" placeholder="Nova categoria..." style="flex:1">
+      <button class="btn btn-p btn-sm" onclick="adicionarCat()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DATA -->
+<div class="mo" id="modal-data">
+  <div class="modal">
+    <div class="mh"><span class="mtitle" id="mdata-title">Data comemorativa</span><button class="mclose" onclick="fechaModal('modal-data')">×</button></div>
+    <div class="mg">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><label>Dia</label><input type="number" id="mdata-dia" min="1" max="31" placeholder="Ex: 12"></div>
+        <div><label>Mês</label>
+          <select id="mdata-mes">
+            <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+            <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+            <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+            <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+          </select>
+        </div>
+      </div>
+      <div><label>Nome da data</label><input type="text" id="mdata-nome" placeholder="Ex: Dia das Mães"></div>
+      <div><label>Categoria principal</label>
+        <select id="mdata-cat">
+          <option value="Todos">Todos</option><option value="Feminino">Feminino</option>
+          <option value="Masculino">Masculino</option><option value="Acessórios">Acessórios</option><option value="Bastidores">Bastidores</option>
+        </select>
+      </div>
+      <div><label>Começar a planejar (dias antes)</label><input type="number" id="mdata-inicio" min="1" max="60" value="14"></div>
+      <div><label>Planejamento / observação</label><textarea id="mdata-note" rows="3" placeholder="Como vai trabalhar essa data? Quais peças? Qual CTA?"></textarea></div>
+    </div>
+    <div class="mf2">
+      <button class="btn btn-s btn-sm" onclick="deletarData()" style="color:#842029;margin-right:auto" id="mdata-del-btn">🗑 Excluir</button>
+      <button class="btn btn-s btn-sm" onclick="fechaModal('modal-data')">Cancelar</button>
+      <button class="btn btn-p btn-sm" onclick="salvarData()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DIA -->
+<div class="mo" id="modal-dia">
+  <div class="modal" style="max-width:380px">
+    <div class="mh"><span class="mtitle" id="modal-dia-title">Adicionar dia</span><button class="mclose" onclick="fechaModal('modal-dia')">×</button></div>
+    <div class="mg">
+      <div>
+        <label>Data (dd/mm/aaaa)</label>
+        <input type="text" id="dia-data-input" placeholder="Ex: 08/07/2026" maxlength="10" oninput="detectarDiaSemana()">
+      </div>
+      <div>
+        <label>Dia da semana detectado</label>
+        <input type="text" id="dia-semana-detectado" readonly style="background:var(--ODD);color:var(--txm)" placeholder="Preencha a data acima">
+      </div>
+      <div>
+        <label>Modelo de conteúdo a carregar</label>
+        <select id="dia-modelo" onchange="previewModelo()">
+          <option value="0">Quarta</option>
+          <option value="1">Quinta</option>
+          <option value="2">Sexta</option>
+          <option value="3">Sábado</option>
+          <option value="4">Domingo</option>
+          <option value="5">Segunda</option>
+          <option value="6">Terça</option>
+        </select>
+        <p style="font-size:11px;color:var(--txl);margin-top:4px">Detectado automaticamente. Você pode alterar se quiser.</p>
+        <p id="modelo-preview-info" style="font-size:11px;color:var(--T);margin-top:2px;display:none"></p>
+      </div>
+    </div>
+    <div class="mf2">
+      <button class="btn btn-s btn-sm" onclick="fechaModal('modal-dia')">Cancelar</button>
+      <button class="btn btn-p btn-sm" id="modal-dia-save-btn" onclick="salvarNovoDia()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BIBLIOTECA -->
+<div class="mo" id="modal-bib">
+  <div class="modal">
+    <div class="mh"><span class="mtitle">Adicionar à biblioteca</span><button class="mclose" onclick="fechaModal('modal-bib')">×</button></div>
+    <div class="mg">
+      <div><label>Categoria</label><select id="bcat"><option>Feminino</option><option>Feminino Plus</option><option>Masculino</option><option>Acessórios</option><option>Dicas de Estilo</option><option>Bastidores</option></select></div>
+      <div><label>Tipo</label><select id="btipo"><option>Legenda Instagram</option><option>Texto Grupo VIP</option><option>CTA</option><option>Hashtags</option><option>Outro</option></select></div>
+      <div><label>Conteúdo</label><textarea id="btexto" rows="4" placeholder="Cole ou escreva..."></textarea></div>
+      <div><label>Avaliação</label><select id="brating"><option value="bom">✅ Funcionou bem</option><option value="medio">⚠️ Mais ou menos</option><option value="nao">❌ Não funcionou</option></select></div>
+      <div><label>Nota (opcional)</label><input type="text" id="bnota" placeholder="Ex: ótimo para Dia das Mães"></div>
+    </div>
+    <div class="mf2"><button class="btn btn-s btn-sm" onclick="fechaModal('modal-bib')">Cancelar</button><button class="btn btn-p btn-sm" onclick="salvarItemBib()">Salvar</button></div>
+  </div>
+</div>
+
+
+
+<!-- MODAL CONFIRMAR -->
+<div class="mo" id="modal-confirmar">
+  <div class="modal" style="max-width:340px;text-align:center">
+    <div class="mh" style="justify-content:center;border-bottom:none;padding-bottom:0">
+      <span class="mtitle" id="modal-confirmar-txt">Deseja excluir?</span>
+    </div>
+    <p style="font-size:13px;color:var(--txm);margin:8px 0 1.25rem">Esta ação não pode ser desfeita.</p>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-s" onclick="fechaModal('modal-confirmar')" style="min-width:100px">Cancelar</button>
+      <button class="btn btn-p" id="modal-confirmar-btn" style="min-width:120px;background:#c0392b">Confirmar exclusão</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =================== SUPABASE ===================
+const SUPABASE_URL = 'https://sidjbzcsokesysmkotte.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_hU0Nqwj3x8HCXGRStsqu4A_8UwHWqNl';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let saveTimer = null;
+
+async function fazerLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const errEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+  errEl.style.display='none';
+  if(!email || !senha){ errEl.textContent='Preencha e-mail e senha'; errEl.style.display='block'; return; }
+  btn.disabled=true; btn.textContent='Entrando...';
+  const {data, error} = await sb.auth.signInWithPassword({email, password: senha});
+  btn.disabled=false; btn.textContent='Entrar';
+  if(error){ errEl.textContent='E-mail ou senha incorretos'; errEl.style.display='block'; return; }
+  await iniciarApp();
+}
+
+async function fazerLogout(){
+  await sb.auth.signOut();
+  document.getElementById('app-screen').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-email').value='';
+  document.getElementById('login-senha').value='';
+}
+
+async function carregarDadosSupabase(){
+  try{
+    const {data, error} = await sb.from('app_data').select('data').eq('id','bhiaba_planner').single();
+    if(error){ console.log('Erro ao carregar:', error); return; }
+    if(data && data.data){
+      const remote = data.data;
+      S = {...S, ...remote};
+      if(!S.bib)S.bib=[];if(!S.slots)S.slots={};if(!S.dataNotas)S.dataNotas={};if(!S.datasCustom)S.datasCustom=[];
+      if(!S.diasExtras)S.diasExtras=[];if(!S.datasHidden)S.datasHidden=[];
+    }
+  }catch(e){ console.log('Erro Supabase:', e); }
+}
+
+async function salvarSupabase(){
+  try{
+    await sb.from('app_data').update({
+      data: {slots:S.slots,bib:S.bib,dataNotas:S.dataNotas,datasCustom:S.datasCustom,tipos:S.tipos,cats:S.cats,diasExtras:S.diasExtras,datasOrder:S.datasOrder,datasHidden:S.datasHidden},
+      updated_at: new Date().toISOString()
+    }).eq('id','bhiaba_planner');
+  }catch(e){ console.log('Erro ao salvar:', e); }
+}
+
+async function iniciarApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-screen').style.display='block';
+  await carregarDadosSupabase();
+  renderTabs();renderSlots();
+}
+
+async function checarSessao(){
+  const {data} = await sb.auth.getSession();
+  if(data && data.session){
+    await iniciarApp();
+  } else {
+    document.getElementById('login-screen').style.display='flex';
+  }
+}
+
+// =================== CONSTANTES ===================
+const SEMANA_INICIO = new Date(2026, 6, 1);
+const DIAS_NOMES = ['Quarta','Quinta','Sexta','Sábado','Domingo','Segunda','Terça'];
+
+function getDiaNome(idx){return DIAS_NOMES[idx];}
+function getDiaData(idx){const d=new Date(SEMANA_INICIO);d.setDate(d.getDate()+idx);return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;}
+function getDiaLabel(idx){return `${getDiaData(idx)} — ${getDiaNome(idx)}`;}
+
+const PLANNER_BASE = {
+  0:{objetivo:'Reels MASC + interação — alcance para não seguidores',slots:[
+    {h:'8h30',t:'Grupo VIP — peça exclusiva antes do feed',tipo:'grupo-vips',cat:'',dica:'Enviar nos grupos FEM e MASC. Peça em destaque antes de qualquer post público. Senso de privilégio.',link:''},
+    {h:'9h00',t:'Story 1 — Bom dia',tipo:'story',cat:'Bastidores',dica:'Simples. Café, loja abrindo. "Quarta por aqui ☕🤎" Sem CTA de venda — só presença.',link:''},
+    {h:'11h00',t:'Reels — MASC (crescimento)',tipo:'reels',cat:'Masculino',dica:'Look masculino completo. 87,7% do público é FEM: direcionar ao olhar feminino. "O look que ele precisa esse inverno 🤎" Falar "moda masculina Campos Novos" no vídeo. 15 a 30 segundos.',link:''},
+    {h:'13h00',t:'Story 2 — Resposta da enquete + dica rápida',tipo:'story',cat:'',dica:'Engajar quem interagiu ontem. Dica de estilo rápida.',link:''},
+    {h:'18h00',t:'Story 3 — Acessórios ou bastidores de fim de tarde',tipo:'story',cat:'Acessórios',dica:'Pico das seguidoras: 18h. Bijuterias, bolsas, cintos. CTA para WhatsApp.',link:''},
+    {h:'20h00',t:'Grupo VIP — novidade + verificar feed e destaques',tipo:'grupo-vips',cat:'',dica:'Checar se os destaques estão atualizados. Enviar novidade exclusiva nos grupos FEM e MASC.',link:''},
+  ]},
+  1:{objetivo:'Dia mais estratégico: Reels dicas + Carrossel — autoridade + conversão',slots:[
+    {h:'8h30',t:'Grupo VIP — peça FEM PLUS antes do feed',tipo:'grupo-vips',cat:'Feminino Plus',dica:'Representatividade converte. Enviar nos grupos FEM e MASC antes de qualquer post público.',link:''},
+    {h:'9h00',t:'Story 1 — Look FEM + caixa de perguntas',tipo:'story',cat:'Feminino',dica:'Quinta = melhor dia para caixa de perguntas. "Qual sua maior dificuldade na hora de montar looks?"',link:''},
+    {h:'13h00',t:'Story 2 — Peça FEM PLUS',tipo:'story',cat:'Feminino Plus',dica:'1ª quinta do mês: vale-presente. 3ª quinta: dicas de looks para batizado.',link:''},
+    {h:'18h00',t:'Reels — série fixa "A essência da semana" (dicas de estilo)',tipo:'reels',cat:'Dicas de Estilo',dica:'SÉRIE SEMANAL FIXA toda quinta às 18h. Dica de estilo com look real ou cliente real.',link:''},
+    {h:'19h00',t:'Carrossel — "5 combinações elegantes para usar essa semana"',tipo:'carrossel',cat:'',dica:'Dentro do pico 18h-21h. Carrossel educativo 5 a 8 slides. Último slide: "Salva pra não esquecer 🤎" + CTA WhatsApp.',link:''},
+    {h:'19h30',t:'Story 3 — Feedbacks de clientes reais',tipo:'story',cat:'',dica:'Prova social converte. "Olha o que a cliente disse 🥹🤎" Repostar com permissão da cliente.',link:''},
+    {h:'20h00',t:'Grupo VIP — responder caixa de perguntas',tipo:'grupo-vips',cat:'',dica:'Responder no mínimo 3 perguntas da caixa. Enviar nos grupos FEM e MASC.',link:''},
+  ]},
+  2:{objetivo:'Carrossel MASC + conversão — fim de semana chegando, decisão de compra',slots:[
+    {h:'8h30',t:'Grupo VIP — look FEM para o fim de semana',tipo:'grupo-vips',cat:'Feminino',dica:'"Vai sair esse final de semana? 👀" Antecipação cria desejo. Enviar nos grupos FEM e MASC.',link:''},
+    {h:'9h00',t:'Story 1 — Look do dia MASC',tipo:'story',cat:'Masculino',dica:'"O look dele para o fim de semana 🤎" Público feminino compra para o parceiro.',link:''},
+    {h:'11h00',t:'Story 2 — Respondendo caixa de perguntas de quinta',tipo:'story',cat:'',dica:'Conteúdo fácil de produzir, alto engajamento. Mostra que a loja ouve e responde.',link:''},
+    {h:'18h00',t:'Carrossel — MASC "Looks para o fim de semana"',tipo:'carrossel',cat:'Masculino',dica:'Pico 18h confirmado. "Para ele ou de presente 🤎" 5 slides com looks completos. Último slide: CTA WhatsApp.',link:''},
+    {h:'18h30',t:'Story 3 — CTA urgência leve para sábado',tipo:'story',cat:'',dica:'"Estamos esperando você amanhã 👀 Loja aberta de manhã" Urgência sem pressão.',link:''},
+    {h:'20h00',t:'Grupo VIP — prévia do sábado',tipo:'grupo-vips',cat:'',dica:'"Amanhã tem novidade para quem está aqui 👀" Reforça o valor de ser VIP.',link:''},
+  ]},
+  3:{objetivo:'Feed FEM + urgência — trazer cliente para a loja física',slots:[
+    {h:'8h30',t:'Grupo VIP — loja aberta + peças do dia',tipo:'grupo-vips',cat:'',dica:'Muitas vendas do sábado começam aqui. Enviar nos grupos FEM e MASC.',link:''},
+    {h:'9h00',t:'Story 1 — Loja aberta + bom dia',tipo:'story',cat:'Bastidores',dica:'Mostrar a loja, o café. Horário de funcionamento visível. "A gente te espera ☕" Urgência leve.',link:''},
+    {h:'10h00',t:'Feed — Carrossel ou foto FEM',tipo:'feed-estatico',cat:'Feminino',dica:'Único post de feed do sábado. Conteúdo visual forte.',link:''},
+    {h:'11h00',t:'Story 2 — Look do dia MASC + horário de fechamento',tipo:'story',cat:'Masculino',dica:'"Ainda dá tempo! Loja aberta até as [12h ou 16h]" Adaptar conforme o sábado.',link:''},
+    {h:'11h30',t:'Grupo VIP — último aviso antes de fechar (12h)',tipo:'grupo-vips',cat:'',dica:'"Quem ainda não veio, ainda dá tempo 👀" Enviar nos grupos FEM e MASC.',link:''},
+    {h:'15h00',t:'Story 3 — Urgência de tarde (sábado estendido até 16h)',tipo:'story',cat:'Bastidores',dica:'Apenas se a loja estiver aberta até 16h. "Ainda estamos aqui até as 16h 🤎"',link:''},
+  ]},
+  4:{objetivo:'Reels — maior oportunidade da semana (pico 18h comprovado)',slots:[
+    {h:'8h30',t:'Grupo VIP — conteúdo leve de domingo',tipo:'grupo-vips',cat:'Bastidores',dica:'Tom aconchegante, sem CTA de venda. Mantém presença nos grupos FEM e MASC.',link:''},
+    {h:'9h30',t:'Story 1 — Bom dia suave',tipo:'story',cat:'Bastidores',dica:'"Domingo pede um cappuccino ☕🤎" Tom emocional, sem CTA de venda. Humaniza a marca.',link:''},
+    {h:'12h30',t:'Story 2 — Bastidores de domingo',tipo:'story',cat:'Bastidores',dica:'Detalhes suaves, café, loja, peças. CTA leve: "Entre no grupo VIP pela bio 🤎"',link:''},
+    {h:'19h00',t:'Reels — mais cuidadoso da semana (emocional + produto)',tipo:'reels',cat:'',dica:'MAIOR PICO: domingo 18h-21h (seus dados comprovam). Fórmula vencedora: conteúdo humano + produto. Referência: post "GRATIDÃO" teve 323 curtidas e 9 comentários organicamente.',link:''},
+    {h:'19h30',t:'Story 3 — Repost do Reels + CTA WhatsApp',tipo:'story',cat:'',dica:'Aproveitar o pico. "Gostou? Chama a gente 🤎" Link para WhatsApp.',link:''},
+    {h:'20h00',t:'Grupo VIP — encerrar semana + prévia da segunda',tipo:'grupo-vips',cat:'',dica:'"Semana incrível com vocês 🤎 Na segunda tem novidade" Cria expectativa. Fideliza.',link:''},
+  ]},
+  5:{objetivo:'Reels FEM + alcance — atrair novos seguidores',slots:[
+    {h:'8h30',t:'Grupo VIP — peça exclusiva antes do feed',tipo:'grupo-vips',cat:'',dica:'Primeiro contato do dia com a base. Enviar nos grupos FEM e MASC antes de qualquer post público.',link:''},
+    {h:'9h00',t:'Story 1 — Bom dia + abertura da semana',tipo:'story',cat:'Bastidores',dica:'Tom acolhedor. Loja abrindo, cappuccino, equipe. Sem CTA de venda — só presença e hábito.',link:''},
+    {h:'11h00',t:'Reels — FEM (crescimento, alcance para não seguidores)',tipo:'reels',cat:'Feminino',dica:'Melhor horário para Reels segunda. Look completo FEM ou transformação. Falar "moda feminina Campos Novos" no vídeo. 15 a 30 segundos. Gancho forte nos 3 primeiros segundos.',link:''},
+    {h:'13h00',t:'Story 2 — Detalhe de peça ou look do dia',tipo:'story',cat:'',dica:'Seguidoras no intervalo do trabalho. Enquete: "qual você escolheria?" Alimenta o algoritmo.',link:''},
+    {h:'18h00',t:'Story 3 — CTA direto para WhatsApp ou grupo VIP',tipo:'story',cat:'',dica:'Pico confirmado: 18h segunda. "Gostou do look de hoje? Chama a gente 🤎"',link:''},
+    {h:'20h00',t:'Grupo VIP — envio noturno + responder comentários',tipo:'grupo-vips',cat:'',dica:'Resposta em até 2h = cliente fecha. Algoritmo recompensa quem responde. Enviar nos grupos FEM e MASC.',link:''},
+  ]},
+  6:{objetivo:'Carrossel FEM PLUS + engajamento — salvamentos e aprofundamento',slots:[
+    {h:'8h30',t:'Grupo VIP — novidade antes do feed',tipo:'grupo-vips',cat:'',dica:'Enviar nos grupos FEM e MASC. Peça em destaque com senso de exclusividade.',link:''},
+    {h:'9h00',t:'Story 1 — Look do dia FEM',tipo:'story',cat:'Feminino',dica:'Look completo com detalhes. Enquete: "qual peça você mais gostou?" Engajamento fácil.',link:''},
+    {h:'13h00',t:'Story 2 — Bastidores naturais',tipo:'story',cat:'Bastidores',dica:'Provador, equipe, tecidos, detalhes. Tom real e próximo.',link:''},
+    {h:'18h00',t:'Carrossel — FEM PLUS "Looks que valorizam toda silhueta"',tipo:'carrossel',cat:'Feminino Plus',dica:'Pico 18h confirmado terça. 5 a 8 slides. Último slide: "Salva pra não esquecer 🤎" + CTA WhatsApp. 1ª terça do mês: gestante.',link:''},
+    {h:'18h30',t:'Story 3 — Link para os Grupos VIP',tipo:'story',cat:'',dica:'"Acesso exclusivo para clientes Bhia.bá 🤎" Mostrar benefício: peças antes de todo mundo.',link:''},
+    {h:'20h00',t:'Grupo VIP — prévia do que vem amanhã',tipo:'grupo-vips',cat:'',dica:'Cria expectativa para a quarta. Exclusivo para quem está nos grupos FEM e MASC.',link:''},
+  ]},
+};
+
+// DATAS padrão
+const DATAS_BASE = [
+  {mes:1,dia:1,nome:'Ano Novo',cat:'Todos',inicio:7},
+  {mes:2,dia:14,nome:'Dia de São Valentim',cat:'Todos',inicio:7},
+  {mes:2,dia:16,nome:'Carnaval',cat:'Bastidores',inicio:14},
+  {mes:3,dia:8,nome:'Dia Internacional da Mulher',cat:'Feminino',inicio:14},
+  {mes:4,dia:5,nome:'Páscoa',cat:'Bastidores',inicio:21},
+  {mes:4,dia:21,nome:'Tiradentes — feriado',cat:'Bastidores',inicio:3},
+  {mes:5,dia:1,nome:'Dia do Trabalho — feriado',cat:'Bastidores',inicio:3},
+  {mes:5,dia:12,nome:'Dia das Mães',cat:'Feminino',inicio:21},
+  {mes:6,dia:12,nome:'Dia dos Namorados',cat:'Todos',inicio:21},
+  {mes:6,dia:24,nome:'Festa Junina',cat:'Bastidores',inicio:7},
+  {mes:7,dia:1,nome:'Início coleção inverno',cat:'Feminino',inicio:7},
+  {mes:8,dia:5,nome:'Liquidação Bhia.bá',cat:'Todos',inicio:14},
+  {mes:8,dia:9,nome:'Dia dos Pais',cat:'Masculino',inicio:21},
+  {mes:8,dia:21,nome:'Dia Internacional da Moda',cat:'Todos',inicio:7},
+  {mes:9,dia:7,nome:'Independência — feriado',cat:'Bastidores',inicio:3},
+  {mes:9,dia:15,nome:'Dia do Cliente',cat:'Todos',inicio:7},
+  {mes:10,dia:4,nome:'Eleições 1º turno',cat:'Bastidores',inicio:3},
+  {mes:10,dia:12,nome:'Dia das Crianças — feriado',cat:'Bastidores',inicio:14},
+  {mes:10,dia:15,nome:'Dia dos Professores',cat:'Todos',inicio:7},
+  {mes:11,dia:20,nome:'Consciência Negra — feriado',cat:'Todos',inicio:7},
+  {mes:11,dia:27,nome:'Black Friday (aprox.)',cat:'Todos',inicio:21},
+  {mes:12,dia:25,nome:'Natal',cat:'Todos',inicio:30},
+  {mes:12,dia:31,nome:'Réveillon',cat:'Todos',inicio:14},
+];
+
+// TIPOS padrão
+const TIPOS_PADRAO = [
+  {id:'grupo-vip-fem',label:'Grupo VIP FEM'},
+  {id:'grupo-vip-masc',label:'Grupo VIP MASC'},
+  {id:'grupo-vips',label:'Grupos VIPs'},
+  {id:'story',label:'Story'},
+  {id:'carrossel',label:'Carrossel'},
+  {id:'feed-estatico',label:'Feed Estático'},
+  {id:'reels',label:'Reels'},
+];
+
+// CATEGORIAS padrão
+const CATS_PADRAO = ['— sem categoria —','Feminino','Feminino Plus','Masculino','Masculino Plus','Acessórios','Dicas de Estilo','Bastidores','Interação','Gestante','Fitness'];
+
+// =================== ESTADO ===================
+let S = {slots:{}, bib:[], dataNotas:{}, datasCustom:[], tipos:null, cats:null, diasExtras:[], datasOrder:null, datasHidden:[]};
+let diaIdx=0, slotKey=null, dataKey=null, editandoDataIdx=null;
+let iaCache={}, iaTab='legenda', mesFilter=null, dragSrcIdx=null;
+
+function getTipos(){return S.tipos||TIPOS_PADRAO;}
+function getCats(){return S.cats||[...CATS_PADRAO];}
+
+function loadS(){
+  try{const s=localStorage.getItem('bhiaba_v5');if(s){const p=JSON.parse(s);S={...S,...p};if(!S.bib)S.bib=[];if(!S.slots)S.slots={};if(!S.dataNotas)S.dataNotas={};if(!S.datasCustom)S.datasCustom=[];if(!S.diasExtras)S.diasExtras=[];if(!S.hasOwnProperty('datasOrder'))S.datasOrder=null;if(!S.datasHidden)S.datasHidden=[];}}catch(e){}
+}
+function saveS(){
+  localStorage.setItem('bhiaba_v5',JSON.stringify({slots:S.slots,bib:S.bib,dataNotas:S.dataNotas,datasCustom:S.datasCustom,tipos:S.tipos,cats:S.cats,diasExtras:S.diasExtras,datasOrder:S.datasOrder,datasHidden:S.datasHidden}));
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(salvarSupabase, 800);
+}
+
+function getDatas(){
+  const hidden = S.datasHidden||[];
+  const all = [...DATAS_BASE,...(S.datasCustom||[])].filter(d=>!hidden.find(h=>h.mes==d.mes&&h.dia==d.dia));
+  if(!S.datasOrder || S.datasOrder.length !== all.length){
+    return all; // no order set yet, return default
+  }
+  // reorder based on S.datasOrder
+  const ordered = [];
+  S.datasOrder.forEach(o=>{
+    const found = all.find(d=>d.mes==o.mes&&d.dia==o.dia);
+    if(found) ordered.push(found);
+  });
+  // add any not in order yet
+  all.forEach(d=>{ if(!ordered.find(o=>o.mes==d.mes&&o.dia==d.dia)) ordered.push(d); });
+  return ordered;
+}
+
+// =================== NAV ===================
+function showSec(id,btn){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');btn.classList.add('active');
+  if(id==='datas')renderDatas();
+  if(id==='biblioteca')renderBib();
+}
+
+// =================== DIAS CUSTOMIZADOS ===================
+// diasExtras: [{label:'08/07 — Quarta', dataStr:'08/07/2026', modeloIdx:0, id: unique}]
+function getDiasExtras(){return S.diasExtras||[];}
+
+const DIAS_SEMANA_NOMES = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+const MODELO_MAP = {0:'Quarta',1:'Quinta',2:'Sexta',3:'Sábado',4:'Domingo',5:'Segunda',6:'Terça'};
+// js getDay(): 0=dom,1=seg,2=ter,3=qua,4=qui,5=sex,6=sab
+// nosso modeloIdx: 0=qua,1=qui,2=sex,3=sab,4=dom,5=seg,6=ter
+const JS_DAY_TO_MODELO = {0:4,1:5,2:6,3:0,4:1,5:2,6:3};
+
+function previewModelo(){
+  const modeloIdx = parseInt(document.getElementById('dia-modelo').value);
+  const nomes = ['Quarta','Quinta','Sexta','Sábado','Domingo','Segunda','Terça'];
+  const info = document.getElementById('modelo-preview-info');
+  if(info){ info.textContent = `Carregará ${PLANNER_BASE[modeloIdx].slots.length} slots do modelo de ${nomes[modeloIdx]}`; info.style.display='block'; }
+}
+
+function detectarDiaSemana(){
+  const val = document.getElementById('dia-data-input').value.trim();
+  const det = document.getElementById('dia-semana-detectado');
+  const sel = document.getElementById('dia-modelo');
+  const parts = val.split('/');
+  if(parts.length===3){
+    const [d,m,a] = parts.map(Number);
+    if(d&&m&&a>2000){
+      const dt = new Date(a,m-1,d);
+      if(!isNaN(dt.getTime())){
+        const jsDay = dt.getDay();
+        const modeloIdx = JS_DAY_TO_MODELO[jsDay];
+        det.value = MODELO_MAP[modeloIdx];
+        sel.value = modeloIdx;
+        return;
+      }
+    }
+  }
+  det.value='';
+}
+
+let editandoDiaId = null;
+
+function abrirAdicionarDia(){
+  editandoDiaId = null;
+  document.getElementById('modal-dia-title').textContent = 'Adicionar dia';
+  document.getElementById('dia-data-input').value = '';
+  document.getElementById('dia-semana-detectado').value = '';
+  document.getElementById('dia-modelo').value = '5';
+  document.getElementById('modal-dia-save-btn').textContent = 'Adicionar';
+  document.getElementById('modal-dia').classList.add('open');
+}
+
+function abrirEditarDia(){
+  editandoDiaId = null;
+  document.getElementById('modal-dia-title').textContent = 'Editar dia';
+  document.getElementById('modal-dia-save-btn').textContent = 'Salvar';
+  if(diaIdx < 7){
+    // base day — pre-fill with its current date/name
+    document.getElementById('dia-data-input').value = getDiaData(diaIdx) + '/2026';
+    detectarDiaSemana();
+    // use saved modeloIdx if exists, else default to diaIdx
+    const savedModelo = S.slots[`day_${diaIdx}`] && S.slots[`day_${diaIdx}`].modeloIdx !== undefined
+      ? S.slots[`day_${diaIdx}`].modeloIdx : diaIdx;
+    document.getElementById('dia-modelo').value = savedModelo;
+    previewModelo();
+    editandoDiaId = 'base_' + diaIdx;
+  } else {
+    const extras = getDiasExtras();
+    const dia = extras[diaIdx-7];
+    if(!dia) return;
+    editandoDiaId = dia.id;
+    document.getElementById('dia-data-input').value = dia.dataStr ? dia.dataStr.substring(0,10) : '';
+    detectarDiaSemana();
+    document.getElementById('dia-modelo').value = dia.modeloIdx;
+  }
+  document.getElementById('modal-dia').classList.add('open');
+}
+
+function salvarNovoDia(){
+  const dataStr = document.getElementById('dia-data-input').value.trim();
+  const modeloIdx = parseInt(document.getElementById('dia-modelo').value);
+  const diaSemana = document.getElementById('dia-semana-detectado').value;
+  if(!dataStr || !diaSemana){ toast('Preencha a data corretamente'); return; }
+  const parts = dataStr.split('/');
+  const label = `${parts[0]}/${parts[1]} — ${diaSemana}`;
+  if(!S.diasExtras) S.diasExtras = [];
+  if(editandoDiaId && String(editandoDiaId).startsWith('base_')){
+    const baseIdx = parseInt(editandoDiaId.replace('base_',''));
+    const key = `day_${baseIdx}`;
+    const existingDone = S.slots[key] && S.slots[key].done ? S.slots[key].done : {};
+    S.slots[key] = {slots: JSON.parse(JSON.stringify(PLANNER_BASE[modeloIdx].slots)), done: existingDone, modeloIdx: modeloIdx};
+    saveS(); fechaModal('modal-dia'); renderTabs(); renderSlots();
+    toast('Dia atualizado ✓'); return;
+  }
+  if(editandoDiaId){
+    const idx = S.diasExtras.findIndex(d=>d.id===editandoDiaId);
+    if(idx>=0){
+      S.diasExtras[idx].dataStr = dataStr;
+      S.diasExtras[idx].label = label;
+      S.diasExtras[idx].modeloIdx = modeloIdx;
+      // reload slots with new model
+      const key = `day_extra_${S.diasExtras[idx].id}`;
+      const existingDone = S.slots[key] && S.slots[key].done ? S.slots[key].done : {};
+      S.slots[key] = {slots: JSON.parse(JSON.stringify(PLANNER_BASE[modeloIdx].slots)), done: existingDone};
+    }
+  } else {
+    const id = Date.now();
+    S.diasExtras.push({id, dataStr, label, modeloIdx});
+    const baseSlots = JSON.parse(JSON.stringify(PLANNER_BASE[modeloIdx].slots));
+    const key = `day_extra_${id}`;
+    if(!S.slots[key]) S.slots[key] = {};
+    S.slots[key].slots = baseSlots;
+    diaIdx = 7 + S.diasExtras.length - 1;
+  }
+  saveS(); fechaModal('modal-dia'); renderTabs(); renderSlots();
+  toast(editandoDiaId ? 'Dia atualizado ✓' : 'Dia adicionado ✓');
+}
+
+function excluirDia(){
+  const btn = document.getElementById('btn-excluir-dia');
+  if(btn && btn.dataset.confirmando !== '1'){
+    btn.dataset.confirmando = '1';
+    btn.textContent = '⚠️ Confirmar exclusão';
+    btn.style.background = '#c0392b';
+    btn.style.color = '#fff';
+    btn.style.border = 'none';
+    setTimeout(()=>{
+      if(btn){btn.dataset.confirmando='';btn.textContent='🗑 Excluir dia';btn.style.background='';btn.style.color='#842029';btn.style.border='';}
+    }, 3000);
+    return;
+  }
+  if(btn){btn.dataset.confirmando='';btn.textContent='🗑 Excluir dia';btn.style.background='';btn.style.color='#842029';btn.style.border='';}
+  if(diaIdx < 7){
+    const key = `day_${diaIdx}`;
+    delete S.slots[key];
+    saveS(); renderTabs(); renderSlots();
+    toast('Conteúdo do dia apagado ✓');
+  } else {
+    const extraIdx = diaIdx - 7;
+    const dia = getDiasExtras()[extraIdx];
+    if(!dia) return;
+    delete S.slots[`day_extra_${dia.id}`];
+    S.diasExtras.splice(extraIdx, 1);
+    diaIdx = Math.min(diaIdx, 6 + S.diasExtras.length);
+    saveS(); renderTabs(); renderSlots();
+    toast('Dia excluído');
+  }
+}
+
+// =================== CALENDÁRIO ===================
+function renderTabs(){
+  const extras = getDiasExtras();
+  const totalDias = 7 + extras.length;
+  let html = Array.from({length:7},(_,i)=>
+    `<button class="dtab${i===diaIdx?' active':''}" onclick="selDia(${i})">${getDiaLabel(i)}</button>`
+  ).join('');
+  extras.forEach((d,i)=>{
+    const idx = 7+i;
+    html += `<button class="dtab${idx===diaIdx?' active':''}" onclick="selDia(${idx})">${d.label}</button>`;
+  });
+  document.getElementById('day-tabs').innerHTML = html;
+  // show/hide edit bar for extra days
+  const bar = document.getElementById('day-edit-bar');
+  if(bar){ bar.style.display = 'flex'; }
+}
+function selDia(i){diaIdx=i;renderTabs();renderSlots();}
+
+function getTipoLabel(id){const t=getTipos().find(t=>t.id===id);return t?t.label:id;}
+function getTipoClass(id){
+  if(id==='reels')return 't-reels';
+  if(id==='carrossel'||id==='feed-estatico')return 't-feed';
+  if(id==='story')return 't-story';
+  if(id.startsWith('grupo'))return 't-grupo';
+  return '';
+}
+function getTipoTagClass(id){
+  if(id==='reels')return 'stag-r';
+  if(id==='carrossel'||id==='feed-estatico')return 'stag-f';
+  if(id==='story')return 'stag-s';
+  if(id.startsWith('grupo'))return 'stag-g';
+  return 'stag-c';
+}
+
+function getDayKey(idx){
+  if(idx < 7) return `day_${idx}`;
+  const extras = getDiasExtras();
+  const d = extras[idx-7];
+  return d ? `day_extra_${d.id}` : `day_${idx}`;
+}
+function getModeloIdx(idx){
+  if(idx < 7) return idx;
+  const extras = getDiasExtras();
+  const d = extras[idx-7];
+  return d ? d.modeloIdx : 0;
+}
+function getSlotsForDay(idx){
+  const key=getDayKey(idx);const custom=S.slots[key];
+  if(custom&&custom.slots)return custom.slots;
+  const modeloIdx = getModeloIdx(idx);
+  return JSON.parse(JSON.stringify(PLANNER_BASE[modeloIdx].slots));
+}
+function setSlotsForDay(idx,slots){const key=getDayKey(idx);if(!S.slots[key])S.slots[key]={};S.slots[key].slots=slots;}
+function getSlotDone(idx,si){const key=getDayKey(idx);return(S.slots[key]&&S.slots[key].done&&S.slots[key].done[si])||false;}
+function setSlotDone(idx,si,val){const key=getDayKey(idx);if(!S.slots[key])S.slots[key]={};if(!S.slots[key].done)S.slots[key].done={};S.slots[key].done[si]=val;}
+
+function renderSlots(){
+  const slots=getSlotsForDay(diaIdx);
+  if(diaIdx < 7){
+    document.getElementById('day-title').textContent=getDiaLabel(diaIdx);
+  } else {
+    const extras=getDiasExtras();const d=extras[diaIdx-7];
+    document.getElementById('day-title').textContent=d?d.label:'';
+  }
+  const reels=slots.filter(s=>s.tipo==='reels').length;
+  const feeds=slots.filter(s=>s.tipo==='carrossel'||s.tipo==='feed-estatico').length;
+  const stories=slots.filter(s=>s.tipo==='story').length;
+  const grupos=slots.filter(s=>s.tipo&&s.tipo.startsWith('grupo')).length;
+  document.getElementById('day-stats').innerHTML=`<div class="dstat"><strong>${reels}</strong> Reels</div><div class="dstat"><strong>${feeds}</strong> Feed</div><div class="dstat"><strong>${stories}</strong> Stories</div><div class="dstat"><strong>${grupos}</strong> Grupos VIP</div>`;
+  document.getElementById('slots-container').innerHTML=slots.map((s,i)=>{
+    const done=getSlotDone(diaIdx,i);const tipo=s.tipo||'outro';
+    return`<div class="slot-wrap" draggable="true" data-idx="${i}" ondragstart="dragStart(event,${i})" ondragover="dragOver(event)" ondrop="dragDrop(event,${i})" ondragend="dragEnd(event)">
+      <div class="slot ${getTipoClass(tipo)}${done?' done':''}">
+        <span class="drag-handle" title="Arrastar">⠿</span>
+        <div class="slot-ck" onclick="toggleDone(${i})">${done?'✓':''}</div>
+        <div class="sh">${s.h||''}</div>
+        <div class="sb" onclick="openSlot(${i})" style="cursor:pointer">
+          <div class="st">${s.t||''}</div>
+          <div class="stags">
+            <span class="stag ${getTipoTagClass(tipo)}">${getTipoLabel(tipo)}</span>
+            ${s.cat?`<span class="stag stag-c">${s.cat}</span>`:''}
+          </div>
+          ${s.peca?`<div style="font-size:11px;color:var(--txm);margin-top:2px">👗 ${s.peca}</div>`:''}
+          ${s.dica&&!s.note?`<div class="sdica">💡 ${s.dica}</div>`:''}
+          ${s.note?`<div class="snote">📝 ${s.note}</div>`:''}
+          ${s.link?`<div style="font-size:11px;margin-top:3px"><a href="${s.link}" target="_blank" style="color:var(--T);text-decoration:underline">🔗 Inspiração</a></div>`:''}
+        </div>
+        <div class="slot-btns">
+          <button class="slot-btn" onclick="openSlot(${i})" title="Editar">✏️</button>
+          <button class="slot-btn del" onclick="delSlotDirect(${i})" title="Excluir" style="color:#c0392b;font-size:14px">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function dragStart(e,idx){dragSrcIdx=idx;e.target.closest('.slot-wrap').classList.add('dragging');e.dataTransfer.effectAllowed='move';}
+function dragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';document.querySelectorAll('.slot-wrap').forEach(w=>w.classList.remove('drag-over'));e.currentTarget.classList.add('drag-over');}
+function dragDrop(e,idx){e.preventDefault();if(dragSrcIdx===null||dragSrcIdx===idx)return;const slots=getSlotsForDay(diaIdx);const moved=slots.splice(dragSrcIdx,1)[0];slots.splice(idx,0,moved);setSlotsForDay(diaIdx,slots);saveS();renderSlots();}
+function dragEnd(e){dragSrcIdx=null;document.querySelectorAll('.slot-wrap').forEach(w=>w.classList.remove('dragging','drag-over'));}
+function toggleDone(si){setSlotDone(diaIdx,si,!getSlotDone(diaIdx,si));saveS();renderSlots();}
+
+function populateTipoSelect(selectId){
+  const sel=document.getElementById(selectId);sel.innerHTML='';
+  getTipos().forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.label;sel.appendChild(o);});
+}
+function populateCatSelect(selectId){
+  const sel=document.getElementById(selectId);sel.innerHTML='';
+  getCats().forEach(c=>{const o=document.createElement('option');o.value=c==='— sem categoria —'?'':c;o.textContent=c;sel.appendChild(o);});
+}
+
+function openSlot(si){
+  slotKey=si;const slots=getSlotsForDay(diaIdx);const s=slots[si];
+  document.getElementById('mslot-title').textContent=s.t||'Editar slot';
+  document.getElementById('mhora').value=s.h||'';
+  document.getElementById('mtitulo').value=s.t||'';
+  populateTipoSelect('mtipo');document.getElementById('mtipo').value=s.tipo||'story';
+  populateCatSelect('mcat');document.getElementById('mcat').value=s.cat||'';
+  document.getElementById('mdica').value=s.dica||'';
+  document.getElementById('mlink').value=s.link||'';
+  document.getElementById('mpeca').value=s.peca||'';
+  document.getElementById('modal-slot').classList.add('open');
+}
+function salvarSlot(){
+  const slots=getSlotsForDay(diaIdx);const s=slots[slotKey];
+  s.h=document.getElementById('mhora').value.trim();
+  s.t=document.getElementById('mtitulo').value.trim();
+  s.peca=document.getElementById('mpeca').value.trim();
+  s.tipo=document.getElementById('mtipo').value;
+  s.cat=document.getElementById('mcat').value;
+  s.dica=document.getElementById('mdica').value.trim();
+  s.link=document.getElementById('mlink').value.trim();
+  setSlotsForDay(diaIdx,slots);saveS();fechaModal('modal-slot');renderSlots();toast('Slot atualizado ✓');
+}
+function delSlotDirect(si){confirmar('Deseja excluir este slot?',()=>{const slots=getSlotsForDay(diaIdx);slots.splice(si,1);setSlotsForDay(diaIdx,slots);saveS();renderSlots();toast('Slot removido');});}
+function delSlotFromModal(){fechaModal('modal-slot');confirmar('Deseja excluir este slot?',()=>{const slots=getSlotsForDay(diaIdx);slots.splice(slotKey,1);setSlotsForDay(diaIdx,slots);saveS();renderSlots();toast('Slot removido');});}
+function addSlot(){const slots=getSlotsForDay(diaIdx);slots.push({h:'',t:'Novo slot',tipo:'story',cat:'',dica:'',link:''});setSlotsForDay(diaIdx,slots);saveS();renderSlots();setTimeout(()=>openSlot(slots.length-1),100);}
+
+// =================== TIPOS & CATEGORIAS ===================
+function abrirGerenciarTipos(){
+  renderTiposList();document.getElementById('novo-tipo-input').value='';
+  document.getElementById('modal-tipos').classList.add('open');
+}
+function renderTiposList(){
+  const tipos=getTipos();
+  document.getElementById('tipos-list').innerHTML=tipos.map((t,i)=>`<div class="gerenciar-item">
+    <span>${t.label}</span>
+    <button class="gerenciar-item-edit" onclick="editarTipo(${i})">✏️</button>
+    <button class="gerenciar-item-del" onclick="deletarTipo(${i})">🗑</button>
+  </div>`).join('');
+}
+function adicionarTipo(){const v=document.getElementById('novo-tipo-input').value.trim();if(!v)return;const tipos=getTipos();const id=v.toLowerCase().replace(/\s+/g,'-');tipos.push({id,label:v});S.tipos=tipos;saveS();renderTiposList();document.getElementById('novo-tipo-input').value='';toast('Tipo adicionado ✓');}
+function editarTipo(i){const tipos=getTipos();const novo=prompt('Editar tipo:',tipos[i].label);if(!novo)return;tipos[i].label=novo.trim();S.tipos=tipos;saveS();renderTiposList();toast('Tipo editado ✓');}
+function deletarTipo(i){if(!confirm('Excluir este tipo?'))return;const tipos=getTipos();tipos.splice(i,1);S.tipos=tipos;saveS();renderTiposList();toast('Tipo removido');}
+
+function abrirGerenciarCats(){
+  renderCatsList();document.getElementById('nova-cat-input').value='';
+  document.getElementById('modal-cats').classList.add('open');
+}
+function renderCatsList(){
+  const cats=getCats();
+  document.getElementById('cats-list').innerHTML=cats.map((c,i)=>`<div class="gerenciar-item">
+    <span>${c}</span>
+    <button class="gerenciar-item-edit" onclick="editarCat(${i})">✏️</button>
+    <button class="gerenciar-item-del" onclick="deletarCat(${i})">🗑</button>
+  </div>`).join('');
+}
+function adicionarCat(){const v=document.getElementById('nova-cat-input').value.trim();if(!v)return;const cats=getCats();cats.push(v);S.cats=cats;saveS();renderCatsList();document.getElementById('nova-cat-input').value='';toast('Categoria adicionada ✓');}
+function editarCat(i){const cats=getCats();const novo=prompt('Editar categoria:',cats[i]);if(!novo)return;cats[i]=novo.trim();S.cats=cats;saveS();renderCatsList();toast('Categoria editada ✓');}
+function deletarCat(i){if(!confirm('Excluir esta categoria?'))return;const cats=getCats();cats.splice(i,1);S.cats=cats;saveS();renderCatsList();toast('Categoria removida');}
+
+
+
+// =================== DATAS ===================
+function renderDatas(){
+  const meses=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const today=new Date();
+  // update select value
+  const sel = document.getElementById('month-select');
+  if(sel) sel.value = mesFilter || '';
+  const allDatas=getDatas();const filtered=mesFilter?allDatas.filter(d=>d.mes===mesFilter):allDatas;
+  const el=document.getElementById('dates-list');
+  if(!filtered.length){el.innerHTML='<div class="empty">Nenhuma data neste mês.</div>';return;}
+  el.innerHTML=filtered.map((d,globalIdx)=>{
+    const de=new Date(today.getFullYear(),d.mes-1,d.dia);if(de<today)de.setFullYear(today.getFullYear()+1);
+    const diff=Math.ceil((de-today)/(1000*60*60*24));
+    const dk=`data-${d.mes}-${d.dia}`;const nota=S.dataNotas[dk]||{};
+    let ac='',ab='';
+    if(diff<=1){ac='a1';ab='<span class="abadge">🔴 Amanhã!</span>';}
+    else if(diff<=3){ac='a3';ab='<span class="abadge">🟠 '+diff+' dias</span>';}
+    else if(diff<=7){ac='a7';ab='<span class="abadge">🟡 '+diff+' dias</span>';}
+    const dataF=`${String(d.dia).padStart(2,'0')}/${String(d.mes).padStart(2,'0')}`;
+    const isCustom=d._custom===true;
+    const allLen=allDatas.length;
+    return`<div class="di ${ac}" style="cursor:default">
+      <div class="dbadge"><div class="dbd">${d.dia}</div><div class="dbm">${meses[d.mes-1]}</div></div>
+      <div class="dinfo">
+        <div class="dname">${dataF} — ${d.nome} ${ab}</div>
+        <div class="dmeta">Categoria: ${d.cat} · Começar ${d.inicio} dias antes · ${diff} dias restantes</div>
+        ${nota.note?`<div class="dnote">📝 ${nota.note}</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
+        <button class="slot-btn" onclick="moverData(${d.mes},${d.dia},-1)" title="Mover para cima" ${globalIdx===0?'disabled':''}>⬆</button>
+        <button class="slot-btn" onclick="moverData(${d.mes},${d.dia},1)" title="Mover para baixo" ${globalIdx===allLen-1?'disabled':''}>⬇</button>
+        <button class="slot-btn" onclick="editarData(${d.mes},${d.dia})" title="Editar">✏️</button>
+        <button class="slot-btn del" onclick="deletarDataItem(${d.mes},${d.dia},${isCustom})" title="Excluir" style="color:#c0392b;font-size:14px">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function moverData(mes, dia, dir){
+  // Build a unified ordered list (base + custom) stored as order array
+  if(!S.datasOrder){
+    // initialize order from current getDatas()
+    S.datasOrder = getDatas().map(d=>({mes:d.mes,dia:d.dia,custom:d._custom===true}));
+  }
+  const idx = S.datasOrder.findIndex(d=>d.mes==mes&&d.dia==dia);
+  if(idx<0) return;
+  const newIdx = idx+dir;
+  if(newIdx<0||newIdx>=S.datasOrder.length) return;
+  const tmp = S.datasOrder[idx];
+  S.datasOrder[idx] = S.datasOrder[newIdx];
+  S.datasOrder[newIdx] = tmp;
+  saveS(); renderDatas();
+}
+
+function deletarDataItem(mes, dia, isCustom){
+  confirmar('Deseja excluir esta data?', ()=>{
+  _deletarDataExec(mes, dia, isCustom);
+  }); return;
+}
+function _deletarDataExec(mes, dia, isCustom){
+  if(isCustom===true||isCustom==="true"){
+    S.datasCustom = S.datasCustom.filter(d=>!(d.mes==mes&&d.dia==dia));
+  }
+  // For base dates, add to hidden list so they don't show
+  if(!S.datasHidden) S.datasHidden=[];
+  if(!(isCustom===true||isCustom==="true")){
+    if(!S.datasHidden.find(d=>d.mes==mes&&d.dia==dia)) S.datasHidden.push({mes,dia});
+  }
+  delete S.dataNotas[`data-${mes}-${dia}`];
+  if(S.datasOrder) S.datasOrder = S.datasOrder.filter(d=>!(d.mes==mes&&d.dia==dia));
+  saveS(); renderDatas();
+  toast('Data removida');
+}
+
+function setMes(m,btn){mesFilter=m;renderDatas();}
+function setMesSelect(val){mesFilter=val?parseInt(val):null;renderDatas();}
+
+function abrirNovaData(){
+  editandoDataIdx=null;
+  document.getElementById('mdata-title').textContent='Nova data';
+  document.getElementById('mdata-dia').value='';
+  document.getElementById('mdata-mes').value='1';
+  document.getElementById('mdata-nome').value='';
+  document.getElementById('mdata-cat').value='Todos';
+  document.getElementById('mdata-inicio').value='14';
+  document.getElementById('mdata-note').value='';
+  document.getElementById('mdata-del-btn').style.display='none';
+  document.getElementById('modal-data').classList.add('open');
+}
+function editarData(mes,dia){
+  const all=getDatas();const d=all.find(x=>x.mes==mes&&x.dia==dia);if(!d)return;
+  const dk=`data-${mes}-${dia}`;const nota=S.dataNotas[dk]||{};
+  editandoDataIdx={mes,dia,isCustom:d._custom===true};
+  document.getElementById('mdata-title').textContent='Editar data';
+  document.getElementById('mdata-dia').value=d.dia;
+  document.getElementById('mdata-mes').value=d.mes;
+  document.getElementById('mdata-nome').value=d.nome;
+  document.getElementById('mdata-cat').value=d.cat||'Todos';
+  document.getElementById('mdata-inicio').value=d.inicio||14;
+  document.getElementById('mdata-note').value=nota.note||'';
+  document.getElementById('mdata-del-btn').style.display=d._custom?'':'none';
+  document.getElementById('modal-data').classList.add('open');
+}
+function salvarData(){
+  const dia=parseInt(document.getElementById('mdata-dia').value);
+  const mes=parseInt(document.getElementById('mdata-mes').value);
+  const nome=document.getElementById('mdata-nome').value.trim();
+  const cat=document.getElementById('mdata-cat').value;
+  const inicio=parseInt(document.getElementById('mdata-inicio').value)||14;
+  const note=document.getElementById('mdata-note').value.trim();
+  if(!dia||!nome){toast('Preencha dia e nome');return;}
+  const dk=`data-${mes}-${dia}`;
+  S.dataNotas[dk]={note,cat};
+  if(!editandoDataIdx){
+    if(!S.datasCustom)S.datasCustom=[];
+    S.datasCustom.push({mes,dia,nome,cat,inicio,_custom:true});
+  } else if(editandoDataIdx.isCustom){
+    const idx=S.datasCustom.findIndex(x=>x.mes==editandoDataIdx.mes&&x.dia==editandoDataIdx.dia);
+    if(idx>=0)S.datasCustom[idx]={mes,dia,nome,cat,inicio,_custom:true};
+  }
+  saveS();fechaModal('modal-data');renderDatas();toast('Data salva ✓');
+}
+function deletarDataCustom(mes,dia){
+  if(!confirm('Excluir esta data?'))return;
+  S.datasCustom=S.datasCustom.filter(x=>!(x.mes==mes&&x.dia==dia));
+  delete S.dataNotas[`data-${mes}-${dia}`];
+  saveS();fechaModal('modal-data');renderDatas();toast('Data removida');
+}
+function deletarData(){
+  if(!editandoDataIdx||!editandoDataIdx.isCustom)return;
+  deletarDataCustom(editandoDataIdx.mes,editandoDataIdx.dia);
+}
+
+// =================== BIBLIOTECA ===================
+function renderBib(){
+  const search=(document.getElementById('lib-search').value||'').toLowerCase();const catF=document.getElementById('lib-fcat').value;
+  const el=document.getElementById('biblioteca-list');let items=S.bib;
+  if(search)items=items.filter(i=>i.texto.toLowerCase().includes(search)||(i.nota||'').toLowerCase().includes(search));
+  if(catF)items=items.filter(i=>i.cat===catF);
+  if(!items.length){el.innerHTML='<div class="empty">Nenhum conteúdo salvo.<br>Use o gerador de IA e salve o que funcionar bem.</div>';return;}
+  const rL={bom:'✅ Funcionou bem',medio:'⚠️ Mais ou menos',nao:'❌ Não funcionou'};const rC={bom:'rb',medio:'rm',nao:'rn'};
+  el.innerHTML=items.map(item=>`<div class="libi">
+    <div class="libh"><span class="libcat">${item.cat}</span><div style="display:flex;gap:6px;align-items:center"><span class="librt ${rC[item.rating]}">${rL[item.rating]}</span><span style="font-size:11px;color:var(--txl)">${item.data||''}</span></div></div>
+    <div style="font-size:11px;color:var(--txl);margin-bottom:4px">${item.tipo}</div>
+    <div class="libtxt">${item.texto}</div>
+    ${item.nota?`<div style="font-size:11px;color:var(--txl);font-style:italic;margin-top:4px">📝 ${item.nota}</div>`:''}
+    <div class="libacts">
+      <button class="btn btn-s btn-sm" onclick="copItem(${item.id})">Copiar</button>
+      <button class="btn btn-s btn-sm" style="color:#842029" onclick="delItem(${item.id})">Excluir</button>
+    </div></div>`).join('');
+}
+function copItem(id){const item=S.bib.find(i=>i.id==id);if(item)navigator.clipboard.writeText(item.texto).then(()=>toast('Copiado! ✓'));}
+function abrirModalBib(){['btexto','bnota'].forEach(id=>document.getElementById(id).value='');document.getElementById('brating').value='bom';document.getElementById('modal-bib').classList.add('open');}
+function salvarItemBib(){const texto=document.getElementById('btexto').value.trim();if(!texto){toast('Digite o conteúdo');return;}S.bib.unshift({id:Date.now(),cat:document.getElementById('bcat').value,tipo:document.getElementById('btipo').value,texto,rating:document.getElementById('brating').value,nota:document.getElementById('bnota').value,data:new Date().toLocaleDateString('pt-BR')});saveS();fechaModal('modal-bib');renderBib();toast('Salvo ✓');}
+function delItem(id){S.bib=S.bib.filter(i=>i.id!=id);saveS();renderBib();toast('Removido');}
+
+// =================== CONFIG ===================
+
+
+// =================== BACKUP ===================
+function exportBackup(){const data={slots:S.slots,bib:S.bib,dataNotas:S.dataNotas,datasCustom:S.datasCustom,tipos:S.tipos,cats:S.cats,diasExtras:S.diasExtras,datasOrder:S.datasOrder,v:5,exportado:new Date().toISOString()};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`bhiaba-backup-${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}.json`;a.click();toast('Backup exportado ✓');}
+function importBackup(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=function(ev){try{const data=JSON.parse(ev.target.result);if(data.slots)S.slots=data.slots;if(data.bib||data.biblioteca)S.bib=data.bib||data.biblioteca;if(data.dataNotas)S.dataNotas=data.dataNotas;if(data.datasCustom)S.datasCustom=data.datasCustom;if(data.tipos)S.tipos=data.tipos;if(data.cats)S.cats=data.cats;if(data.diasExtras)S.diasExtras=data.diasExtras;if(data.datasOrder)S.datasOrder=data.datasOrder;saveS();renderTabs();renderSlots();toast('Importado ✓');}catch(err){toast('Erro ao importar');}};r.readAsText(file);e.target.value='';}
+function limpar(){if(!confirm('Apagar todos os dados?'))return;S.slots={};S.bib=[];S.dataNotas={};S.datasCustom=[];S.tipos=null;S.cats=null;S.diasExtras=[];saveS();renderTabs();renderSlots();toast('Dados apagados');}
+
+// =================== MODAL ===================
+function confirmar(msg, fn){
+  document.getElementById('modal-confirmar-txt').textContent = msg;
+  const btn = document.getElementById('modal-confirmar-btn');
+  btn.onclick = function(){ fechaModal('modal-confirmar'); fn(); };
+  document.getElementById('modal-confirmar').classList.add('open');
+}
+
+function fechaModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
+
+// =================== TOAST ===================
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+// =================== INIT ===================
+loadS();
+checarSessao();
+</script>
+</div>
+</body>
+</html>
