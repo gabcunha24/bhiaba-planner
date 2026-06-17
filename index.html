@@ -499,15 +499,11 @@ async function fazerLogout(){
 
 async function carregarDadosSupabase(){
   try{
-    const {data, error} = await sb.from('app_data').select('data').eq('id','bhiaba_planner').single();
-    if(error){ console.log('Erro ao carregar:', error); return; }
-    if(data && data.data){
-      const remote = data.data;
-      S = {...S, ...remote};
-      if(!S.bib)S.bib=[];if(!S.slots)S.slots={};if(!S.dataNotas)S.dataNotas={};if(!S.datasCustom)S.datasCustom=[];
-      if(!S.diasExtras)S.diasExtras=[];if(!S.datasHidden)S.datasHidden=[];
-    }
+    const {data, error} = await sb.from('app_data').select('data,updated_at').eq('id','bhiaba_planner').single();
+    if(error){ console.log('Erro ao carregar:', error); return null; }
+    if(data && data.data){ return {data: data.data, updated_at: data.updated_at}; }
   }catch(e){ console.log('Erro Supabase:', e); }
+  return null;
 }
 
 async function salvarSupabase(){
@@ -522,7 +518,30 @@ async function salvarSupabase(){
 async function iniciarApp(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-screen').style.display='block';
-  await carregarDadosSupabase();
+
+  // 1. Carrega localStorage primeiro
+  loadS();
+  const localRaw = localStorage.getItem('bhiaba_v5');
+  const localTs = localRaw ? (JSON.parse(localRaw)._savedAt || 0) : 0;
+
+  // 2. Carrega Supabase
+  const remote = await carregarDadosSupabase();
+
+  if(remote && remote.data){
+    const remoteTs = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
+    if(remoteTs > localTs){
+      // Supabase é mais recente — usa Supabase
+      S = {...S, ...remote.data};
+    }
+    // Se local é mais recente ou igual, mantém o que já foi carregado pelo loadS()
+    // e sincroniza o Supabase com os dados locais mais novos
+    if(localTs > remoteTs){
+      setTimeout(salvarSupabase, 100);
+    }
+  }
+
+  if(!S.bib)S.bib=[];if(!S.slots)S.slots={};if(!S.dataNotas)S.dataNotas={};if(!S.datasCustom)S.datasCustom=[];
+  if(!S.diasExtras)S.diasExtras=[];if(!S.datasHidden)S.datasHidden=[];
   renderTabs();renderSlots();
 }
 
@@ -685,7 +704,7 @@ function loadS(){
   try{const s=localStorage.getItem('bhiaba_v5');if(s){const p=JSON.parse(s);S={...S,...p};if(!S.bib)S.bib=[];if(!S.slots)S.slots={};if(!S.dataNotas)S.dataNotas={};if(!S.datasCustom)S.datasCustom=[];if(!S.diasExtras)S.diasExtras=[];if(!S.hasOwnProperty('datasOrder'))S.datasOrder=null;if(!S.datasHidden)S.datasHidden=[];}}catch(e){}
 }
 function saveS(){
-  localStorage.setItem('bhiaba_v5',JSON.stringify({slots:S.slots,bib:S.bib,dataNotas:S.dataNotas,datasCustom:S.datasCustom,tipos:S.tipos,cats:S.cats,diasExtras:S.diasExtras,datasOrder:S.datasOrder,datasHidden:S.datasHidden,modelosCustom:S.modelosCustom}));
+  localStorage.setItem('bhiaba_v5',JSON.stringify({slots:S.slots,bib:S.bib,dataNotas:S.dataNotas,datasCustom:S.datasCustom,tipos:S.tipos,cats:S.cats,diasExtras:S.diasExtras,datasOrder:S.datasOrder,datasHidden:S.datasHidden,modelosCustom:S.modelosCustom,_savedAt:Date.now()}));
   if(saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(salvarSupabase, 800);
 }
